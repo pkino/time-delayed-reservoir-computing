@@ -1,6 +1,6 @@
 function [a_matrix, b_matrix] = find_ab(eigMin, eigMax, gapMax, gapMin)
 eigen_init = eigMin; %-0.016
-eig_num = 10;
+eig_num = 4;
 eigen_fin = eigMax; %3.125e-3
 Max_Eigen = -logspace(eigen_init, eigen_fin, eig_num);
 % for step = 1:eigen_num
@@ -34,7 +34,7 @@ Max_Eigen = -logspace(eigen_init, eigen_fin, eig_num);
 % end
 
 %% dx = -a*x + b*x_tau において、最大固有値と2番目の固有値が決まっているときにa,bを求める
-gap_num = 10;
+gap_num = 4;
 tau = 80;
 
 a_matrix = NaN(gap_num, eig_num);
