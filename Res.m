@@ -2,7 +2,7 @@ function  [step_half, N, l_num, x_kl, x_kt, ul, ut, l_start] = Res(a, b, c1, gam
 %% 初期設定
 % data*step_allの行列のデータを入力
 data = 1; % 1ステップあたりの入力データ数
-step_half = 1500; % 初期値は3200
+step_half = 1500; % 初期値は3200 論文執筆時は実は1500
 step_all = 2*step_half; % データ長=ステップ数
 theta = 0.01; % [s] 0.2 0.01
 
@@ -24,16 +24,13 @@ step_all = step_all*N;
 %% 目標データの生成
 data_length = step_half/N+200; % 少し長めに準備
 
-%格納変数・初期値
+% 格納変数・初期値
 ul = 0.5*rand(data,data_length); % 入力データを学習とテストで作り変える
 ut = 0.5*rand(data,data_length);
-% ul = normrnd(0,1,[data,data_length]); % 入力データを学習とテストで作り変える
-% ut = normrnd(0,1,[data,data_length]);
-%     save('ul', 'ul');
-%     save('ut', 'ut');
-%     load('ul.mat');
-%     load('ut.mat');
 
+% MG = load('MackeyGlass_t17.txt');
+% ul = MG(1:data_length)';
+% ut = MG(data_length+1:data_length*2)';
 
 
 %% 周期の算出
@@ -125,8 +122,8 @@ end
 
 %% テスト
 % テストまで行う場合はこのコメントアウトを外す
-taskDelay = 10;
-RC_MF(taskDelay, step_half, N, l_num,x_kl, x_kt, ul, ut, l_start)
+% taskDelay = 50;
+% RC_MF_pinv(taskDelay, step_half, N, l_num,x_kl, x_kt, ul, ut, l_start)
 
 end
 

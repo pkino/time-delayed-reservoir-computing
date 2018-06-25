@@ -5,7 +5,7 @@ Maxeig = [-0.016, -0.008, -0.004, -0.002, -0.001,-0.0005,-0.00025, -0.000125, -0
 horizontal = 10;
 vertical = 20;
 other = 1;
-taskNum = 2;
+taskNum = 8;
 % plotDelay = 8;
 checkNum = vertical*other*taskNum;
 
