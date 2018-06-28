@@ -1,22 +1,36 @@
-data = REC_NARMA;
-data((data(:,5) == 11), 5) = NaN;
-Maxeig = logspace(eigMin, eigMax, a_num);
-Eiggap =  logspace(gapMax, gapMin, b_num);
+data = NRMSE;
+Maxeig = logspace(eigMin, eigMax, eigNum);
+Eiggap =  logspace(gapMax, gapMin, gapNum);
+searchNum = 5;
 
-horizontal = a_num;
-vertical = b_num;
-other = g_num;
+cIndex = 3;
+[bestPerform, bestIndex] = min(data(:,searchNum+1));
+bestC = data(bestIndex, cIndex);
+
+horizontal = eigNum;
+vertical = gapNum;
+other = gammaNum*cNum;
 
 map = zeros(vertical, horizontal,2);
-for step = 1:horizontal
-    for step2 = 1:vertical
-        plotter = data((step-1)*vertical*other+(step2-1)*other+1:(step-1)*vertical*other+(step2-1)*other+other, 2:3);
-        [map(step2,step,1), miniIndex]  = min(plotter(:,1));
-        map(step2,step,2) = plotter(miniIndex,2);
+for step = 1:vertical
+    for step2 = 1:horizontal
+        plotter = data((step-1)*vertical*other+(step2-1)*other+1:(step-1)*vertical*other+(step2-1)*other+other, 1:searchNum+2);
+        
+        % c固定
+        plotter = plotter(plotter(:,cIndex) == bestC,:);
+        
+        
+        [map(step,step2,1), miniIndex]  = min(plotter(:,end-1));
+        map(step,step2,2) = plotter(miniIndex,end);
+        
+        % 各値が知りたいときはコメントアウトを外す
+%         miniIndex
+%         c=plotter(miniIndex,3)
     end
 end
 
-% マップ
+%% マップ描画
+figure;
 set(gca,'XScale','log')
 X = repelem(Maxeig',vertical);
 Y = repmat(Eiggap',horizontal,1);
@@ -24,7 +38,5 @@ Z = reshape(map(:,:,1),numel(map(:,:,1)),1);
 c = Z;
 imagesc([eigMin eigMax], [gapMax gapMin], map(:,:,1));
 caxis([min(min(map(:,:,1))), 1]);
-colorbar
-% scatter3(X,Y,Z,700,c,'filled');
-% surf(Maxeig,Eiggap,map(:,:,1));
+colorbar;
 

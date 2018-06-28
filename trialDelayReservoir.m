@@ -43,9 +43,9 @@ parfor step_gap = 1:gapNum
         for step_c = 1:cNum
             for step_p = 1:pNum
                 for step_g = 1:gammaNum
-                    for stepTrial = 1+initNo-1:trial+initNo-1
+                    for stepTrial = 1:trial
                         [saveData{stepTrial,step_g, step_p, step_c, step_eig, step_gap,:}] ...
-                            = delayReservoir(stepTrial, order, theta, learnDimension, biasCheck, inputCheck, ...
+                            = delayReservoir(stepTrial+initNo-1, order, theta, learnDimension, biasCheck, inputCheck, ...
                             a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), cData(step_c), pData(step_p), gammaData(step_g));
                     end
                 end
@@ -81,6 +81,9 @@ NRMSE = REC(:,:,1);
 NRMSE_C = REC(:,:,2);
 seedDataGen = REC(:,:,3);
 seedMask = REC(:,:,4);
+
+[bestNRMSE_C, NRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
+[bestNRMSE, NRMSEIndex] = min(NRMSE(:,searchNum+1));
 
 Date = datestr(datetime('now'),'yyyymmddHHMM');
 save(strcat(Date,'TDRC=', Model, '_NARMA',num2str(order), '_biasCheck=', num2str(biasCheck),'_inputCheck=', num2str(inputCheck), ...
