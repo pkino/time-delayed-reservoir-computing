@@ -1,8 +1,7 @@
-function [a_matrix, b_matrix] = find_ab(eigMin, eigMax, gapMax, gapMin)
+function [a_matrix, b_matrix] = find_ab(eigMin, eigMax, eigNum, gapMax, gapMin, gapNum)
 eigen_init = eigMin; %-0.016
-eig_num = 4;
 eigen_fin = eigMax; %3.125e-3
-Max_Eigen = -logspace(eigen_init, eigen_fin, eig_num);
+Max_Eigen = -logspace(eigen_init, eigen_fin, eigNum);
 % for step = 1:eigen_num
 %     Max_Eigen(step,1) = eigen_init*eigen_inter^(step-1);
 % end
@@ -34,15 +33,14 @@ Max_Eigen = -logspace(eigen_init, eigen_fin, eig_num);
 % end
 
 %% dx = -a*x + b*x_tau において、最大固有値と2番目の固有値が決まっているときにa,bを求める
-gap_num = 4;
 tau = 80;
 
-a_matrix = NaN(gap_num, eig_num);
-b_matrix = NaN(gap_num, eig_num);
+a_matrix = NaN(gapNum, eigNum);
+b_matrix = NaN(gapNum, eigNum);
 tau = 80;
-dis_eig = logspace(gapMax, gapMin, gap_num); %0.005,1e-5
-for step_gap = 1:gap_num
-    for step_eig = 1:eig_num
+dis_eig = logspace(gapMax, gapMin, gapNum); %0.005,1e-5
+for step_gap = 1:gapNum
+    for step_eig = 1:eigNum
         syms a b lam_sym;
         lambert = solve(lam_sym + a -b*exp(-(tau*lam_sym)) == 0, lam_sym);
         num = [0,-1];

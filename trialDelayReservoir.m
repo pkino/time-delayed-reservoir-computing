@@ -1,4 +1,4 @@
-function trialDelayReservoir(trial, Model, order, theta, learnDimension, biasCheck, inputCheck, ...
+function trialDelayReservoir(trial, initNo, Model, order, theta, learnDimension, biasCheck, inputCheck, ...
     cMin, cMax, pMin)
 if Model == 'L'
     c = 0;
@@ -8,25 +8,24 @@ if Model == 'L'
     gammaData = logspace(gammaInit, gammaFin, gammaNum)';
 elseif Model == 'NL'
     %     c= -0.1;
-    gammaInit = 0.01;
-    gammaFin = 5;
-    gammaInter = 0.499;
-    gammaNum = int32((gammaFin-gammaInit)/gammaInter+1);
-    gammaData = (gammaInit:gammaInter:gammaFin)';
+    gammaInit = -4;
+    gammaFin = 1.5;
+    %     gammaInter = 0.499;
+    %     gammaNum = int32((gammaFin-gammaInit)/gammaInter+1);
+    gammaNum = 20;
+    %     gammaData = (gammaInit:gammaInter:gammaFin)';
+    gammaData = logspace(gammaInit, gammaFin, gammaNum);
 else
     error('ÉÇÉfÉãÇê≥ÇµÇ≠ëIëÇµÇƒÇ≠ÇæÇ≥Ç¢');
 end
 
-eigMin=-1.5; eigMax=-9; gapMax=-2; gapMin=-8;
-[a_mat, b_mat] = find_ab(eigMin, eigMax, gapMax, gapMin);
+eigMin=-1.5; eigMax=-6; eigNum=5; gapMax=-2; gapMin=-5.5; gapNum=5; % eigMin=-1.5; eigMax=-9; gapMax=-2; gapMin=-8;
+[a_mat, b_mat] = find_ab(eigMin, eigMax, eigNum, gapMax, gapMin, gapNum);
 
-gapNum = size(a_mat,1);
-eigNum = size(a_mat,2);
-
-cNum = 10;
+cNum = 20;
 % cMin = -0.1;
 % cMax = 1.5;
-cData = linspace(cMin,cMax,cNum);
+cData = logspace(cMin,cMax,cNum);
 
 pNum = 1;
 % pMin = 3;
@@ -44,7 +43,7 @@ parfor step_gap = 1:gapNum
         for step_c = 1:cNum
             for step_p = 1:pNum
                 for step_g = 1:gammaNum
-                    for stepTrial = 1:trial
+                    for stepTrial = 1+initNo-1:trial+initNo-1
                         [saveData{stepTrial,step_g, step_p, step_c, step_eig, step_gap,:}] ...
                             = delayReservoir(stepTrial, order, theta, learnDimension, biasCheck, inputCheck, ...
                             a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), cData(step_c), pData(step_p), gammaData(step_g));
@@ -84,8 +83,7 @@ seedDataGen = REC(:,:,3);
 seedMask = REC(:,:,4);
 
 Date = datestr(datetime('now'),'yyyymmddHHMM');
-save(strcat(Date,'TDRC_NARMA',num2str(order), '_biasCheck=', num2str(biasCheck),'_inputCheck=', num2str(inputCheck), ...
+save(strcat(Date,'TDRC=', Model, '_NARMA',num2str(order), '_biasCheck=', num2str(biasCheck),'_inputCheck=', num2str(inputCheck), ...
     '_c=', num2str(cMin),'-', num2str(cMax), '_p=', num2str(pMin),'-', num2str(pMax),...
-    '_gamma=', num2str(gammaInit),'-', num2str(gammaFin), '_trial=', num2str(trial), '.mat'), ...
-    'NRMSE', 'NRMSE_C', 'seedDataGen', 'seedMask', 'biasCheck', 'inputCheck', 'theta', 'gapNum', 'eigNum', 'trial','-v7.3');
+    '_gamma=', num2str(gammaInit),'-', num2str(gammaFin), '_trial=', num2str(trial), '.mat'), '-v7.3');
 end
