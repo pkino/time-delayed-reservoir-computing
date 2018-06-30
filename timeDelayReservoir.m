@@ -1,10 +1,12 @@
-function  [NRMSE, NRMSE_C, seed_dataGen, seed_mask] = delayReservoir(seed_no, order, theta, learnDimension, biasCheck, inputCheck, a, b, c, p, gamma)
+function  [x_kl, x_kt] = ...
+    timeDelayReservoir(seed_no, ul, ut, RCLen, theta, learnDimension, ...
+    biasCheck, inputCheck, a, b, c, p, gamma)
 % step_half, N, learnDimension, x_kl, x_kt, ul, ut, l_start
 
 %% 初期設定
 % data*step_allの行列のデータを入力
 data = 1; % 1ステップあたりの入力データ数
-step_half = 1500; % 初期値は3200 論文執筆時は実は1500
+step_half = RCLen; % 初期値は3200 論文執筆時は実は1500
 step_all = 2*step_half; % データ長=ステップ数
 % theta = 0.01; % [s] 0.2 0.01
 
@@ -19,13 +21,8 @@ N = tau/theta; % delayのstep数
 step_half = step_half*N;
 step_all = step_all*N;
 
+dataLen = length(ul); % 少し長めに準備
 
-%% 入力・目標データの生成
-dataLen = step_half/N+500; % 少し長めに準備
-
-seed_dataGen = seed_no;
-[ul, ug, ut, Yl, Yg, Yt] = dataGenerator_NARMA(dataLen,seed_dataGen,order);
-seed_no = seed_no+1; % seed_numを使ったら1足す
 
 %% 周期の算出
 X_step = step_all*2; %数が足りる最小の長さで
@@ -109,9 +106,9 @@ while u_step_t < dataLen
     Xt(:,step) = Xt(:,step-1) + dxt*theta;
 end
 
-%% 学習データから重みを求める
+%% 学習データ
 l_interval = N;
-l_start = 200; % Xが安定したところから学習スタート
+
 x_kl = zeros(learnDimension, dataLen);
 x_kt = zeros(learnDimension, dataLen);
 for k_step = 1:dataLen-1
@@ -132,14 +129,6 @@ if biasCheck == 0
 else
     x_kl = vertcat(ones(1,dataLen),x_kl);
     x_kt = vertcat(ones(1,dataLen),x_kt);
-end
-
-
-%% テスト
-try
-    [NRMSE, NRMSE_C] = RC(step_half, N, size(x_kl,1), x_kl, x_kt, Yl, Yt, l_start);
-catch
-    NRMSE =  NaN; NRMSE_C =  NaN;
 end
 end
 

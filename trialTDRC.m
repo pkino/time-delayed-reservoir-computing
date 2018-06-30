@@ -1,5 +1,7 @@
-function trialDelayReservoir(trial, initNo, Model, order, theta, learnDimension, biasCheck, inputCheck, ...
+function trialTDRC(trial, initNo, Model, order, theta, learnDimension, biasCheck, inputCheck, ...
     cMin, cMax, pMin)
+%% 0628delayReservoirÇÕÇ»Ç≠Ç»ÇËÇ‹ÇµÇΩÅ@ïœçXÇÊÇÎÇµÇ≠
+
 if Model == 'L'
     c = 0;
     gammaInit = 3;
@@ -33,7 +35,7 @@ pMax = pMin;
 pData = linspace(pMin,pMax,pNum);
 
 searchNum = 5;
-saveNum = 4;
+saveNum = 3;
 saveData = cell(trial, gammaNum, pNum, cNum, eigNum, gapNum, saveNum);
 paramLength = gapNum*eigNum*cNum*pNum*gammaNum;
 paramsSet = NaN(paramLength,searchNum+2+1);
@@ -47,6 +49,11 @@ parfor step_gap = 1:gapNum
                         [saveData{stepTrial,step_g, step_p, step_c, step_eig, step_gap,:}] ...
                             = delayReservoir(stepTrial+initNo-1, order, theta, learnDimension, biasCheck, inputCheck, ...
                             a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), cData(step_c), pData(step_p), gammaData(step_g));
+                        try
+                            [NRMSE(1,saveParaNum+stepTrial), NRMSE_C(saveParaNum+stepTrial)] = RC(RCLen, vertcat(para_x_kl{:}), vertcat(para_x_kt{:}), Yl, Yt);
+                        catch
+                            NRMSE(1,saveParaNum+stepTrial) =  NaN; NRMSE_C(saveParaNum+stepTrial) =  NaN;
+                        end
                     end
                 end
             end
@@ -80,7 +87,6 @@ end
 NRMSE = REC(:,:,1);
 NRMSE_C = REC(:,:,2);
 seedDataGen = REC(:,:,3);
-seedMask = REC(:,:,4);
 
 [bestNRMSE_C, NRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
 [bestNRMSE, NRMSEIndex] = min(NRMSE(:,searchNum+1));
