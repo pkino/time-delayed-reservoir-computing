@@ -90,6 +90,7 @@ seedDataGen = REC(:,:,3);
 
 [bestNRMSE_C, NRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
 [bestNRMSE, NRMSEIndex] = min(NRMSE(:,searchNum+1));
+clear REC saveData
 
 Date = datestr(datetime('now'),'yyyymmddHHMM');
 save(strcat(Date,'TDRC=', Model, '_NARMA',num2str(order), '_biasCheck=', num2str(biasCheck),'_inputCheck=', num2str(inputCheck), ...
