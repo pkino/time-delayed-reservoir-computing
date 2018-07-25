@@ -1,13 +1,11 @@
 function  [x_kl, x_kt] = ...
-    timeDelayReservoir(seed_no, ul, ut, RCLen, theta, learnDimension, ...
+    timeDelayReservoir(seed_no, ul, ut, theta, learnDimension, ...
     biasCheck, inputCheck, a, b, c, p, gamma)
 % step_half, N, learnDimension, x_kl, x_kt, ul, ut, l_start
 
 %% 初期設定
 % data*step_allの行列のデータを入力
 data = 1; % 1ステップあたりの入力データ数
-step_half = RCLen; % 初期値は3200 論文執筆時は実は1500
-step_all = 2*step_half; % データ長=ステップ数
 % theta = 0.01; % [s] 0.2 0.01
 
 tau = 80; %[s] 400*theta
@@ -18,18 +16,14 @@ N = tau/theta; % delayのstep数
 % gamma =0.5;
 
 %データの長さ
-step_half = step_half*N;
-step_all = step_all*N;
-
 dataLen = length(ul); % 少し長めに準備
 
 
 %% 周期の算出
-X_step = step_all*2; %数が足りる最小の長さで
 % 周期固定の場合
 i_period = N;
-index=step_all/N;
-step = (1:step_all/N+1)';
+index=dataLen;
+step = (1:dataLen+1)';
 p_start = (step-1)*i_period+1;
 p_interval(:,:) = p_start(2:index,:) - p_start(1:index-1,:);
 
@@ -56,8 +50,8 @@ for step = 1:dataLen
 end
 
 % リザーバのデータを毎ステップとって，周期の始点を検出しながらMGの計算
-Xl = zeros(1,X_step/2);
-Xt = zeros(1,X_step/2);
+Xl = zeros(1,dataLen*N);
+Xt = zeros(1,dataLen*N);
 X_index_l = ones(dataLen,2,data); % 入力した長さを記録
 X_index_t = ones(dataLen,2,data);
 

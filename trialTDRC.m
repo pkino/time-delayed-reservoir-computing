@@ -1,7 +1,8 @@
-function trialTDRC(trial, initNo, Model, order, theta, learnDimension, biasCheck, inputCheck, ...
+function trialTDRC(trial, initNo, Model, Task, order, theta, learnDimension, biasCheck, inputCheck, ...
     cMin, cMax, pMin)
-%% 0628delayReservoirはなくなりました　変更よろしく
+dbstop if error
 
+%% モデルの選択
 if Model == 'L'
     c = 0;
     gammaInit = 3;
@@ -10,8 +11,8 @@ if Model == 'L'
     gammaData = logspace(gammaInit, gammaFin, gammaNum)';
 elseif Model == 'NL'
     %     c= -0.1;
-    gammaInit = -4;
-    gammaFin = 1.5;
+    gammaInit = -2;
+    gammaFin = 1;
     %     gammaInter = 0.499;
     %     gammaNum = int32((gammaFin-gammaInit)/gammaInter+1);
     gammaNum = 20;
@@ -35,10 +36,15 @@ pMax = pMin;
 pData = linspace(pMin,pMax,pNum);
 
 searchNum = 5;
-saveNum = 3;
+saveNum = 2;
 saveData = cell(trial, gammaNum, pNum, cNum, eigNum, gapNum, saveNum);
 paramLength = gapNum*eigNum*cNum*pNum*gammaNum;
-paramsSet = NaN(paramLength,searchNum+2+1);
+paramsSet = NaN(paramLength,searchNum+3+1);
+
+RCLen = 1500;
+dataLen = RCLen + 500;
+seed_status = 1; % seed_dataGen - seed_mask
+dataGen = str2func(strcat('dataGenerator_',Task));
 
 parfor step_gap = 1:gapNum
     for step_eig = 1:eigNum
@@ -46,14 +52,18 @@ parfor step_gap = 1:gapNum
             for step_p = 1:pNum
                 for step_g = 1:gammaNum
                     for stepTrial = 1:trial
-                        [saveData{stepTrial,step_g, step_p, step_c, step_eig, step_gap,:}] ...
-                            = delayReservoir(stepTrial+initNo-1, order, theta, learnDimension, biasCheck, inputCheck, ...
+                        %% 入力・目標データの生成
+                        seed_dataGen = stepTrial+initNo-1;
+                        [ul, ~, ut, Yl, ~, Yt] = dataGen(dataLen,seed_dataGen,order);
+                        seed_no = stepTrial+seed_status;
+                        
+                        %% リザーバ計算
+                        [x_kl, x_kt] ...
+                            = timeDelayReservoir(seed_no, ul, ut, theta, learnDimension, biasCheck, inputCheck, ...
                             a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), cData(step_c), pData(step_p), gammaData(step_g));
-                        try
-                            [NRMSE(1,saveParaNum+stepTrial), NRMSE_C(saveParaNum+stepTrial)] = RC(RCLen, vertcat(para_x_kl{:}), vertcat(para_x_kt{:}), Yl, Yt);
-                        catch
-                            NRMSE(1,saveParaNum+stepTrial) =  NaN; NRMSE_C(saveParaNum+stepTrial) =  NaN;
-                        end
+                        
+                        %% 学習とテスト
+                        [saveData{stepTrial,step_g, step_p, step_c, step_eig, step_gap,:}] = TDRC(RCLen, x_kl, x_kt, Yl, Yt);
                     end
                 end
             end
@@ -77,19 +87,20 @@ for step_gap = 1:gapNum
     end
 end
 
-REC = zeros(paramLength, searchNum+2+1+trial,saveNum);
+REC = zeros(paramLength, searchNum+3+1+trial,saveNum);
 for stepSaveNum = 1:saveNum
     paramsSet(:,searchNum+1) = mean(cell2mat(saveData(:,:,stepSaveNum)),2,'omitnan');
-    paramsSet(:,searchNum+2) = std(cell2mat(saveData(:,:,stepSaveNum)),0,2);
+    paramsSet(:,searchNum+2) = std(cell2mat(saveData(:,:,stepSaveNum)),0,2,'omitnan');
+    paramsSet(:,searchNum+3) = trial - sum(isnan(cell2mat(saveData(:,:,stepSaveNum))),2);
     REC(:,:,stepSaveNum) =  horzcat(paramsSet,cell2mat(saveData(:,:,stepSaveNum)));
 end
 
 NRMSE = REC(:,:,1);
 NRMSE_C = REC(:,:,2);
-seedDataGen = REC(:,:,3);
 
-[bestNRMSE_C, NRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
-[bestNRMSE, NRMSEIndex] = min(NRMSE(:,searchNum+1));
+[bestNRMSE_C, bestNRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
+[bestNRMSE, bestNRMSEIndex] = min(NRMSE(:,searchNum+1));
+
 clear REC saveData
 
 Date = datestr(datetime('now'),'yyyymmddHHMM');

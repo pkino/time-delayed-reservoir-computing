@@ -48,7 +48,7 @@ parfor stepTrial = 1:trial
     para_x_kl = cell(paraNum); para_x_kt = cell(paraNum);
     for stepPara = 1:paraNum
         [para_x_kl{stepPara}, para_x_kt{stepPara}] = ...
-            timeDelayReservoir(seed_no, ul, ut, RCLen, paraParam(stepPara,1),paraParam(stepPara,2), ...
+            timeDelayReservoir(seed_no, ul, ut, paraParam(stepPara,1),paraParam(stepPara,2), ...
             paraParam(stepPara,3), paraParam(stepPara,4), paraParam(stepPara,5), paraParam(stepPara,6), ...
             paraParam(stepPara,7), paraParam(stepPara,8), paraParam(stepPara,9));
         seedREC(stepPara,stepTrial) = seed_no;
@@ -56,15 +56,11 @@ parfor stepTrial = 1:trial
     
     %% 学習とテスト
     try
-        [NRMSE(1,saveParaNum+stepTrial), NRMSE_C(saveParaNum+stepTrial)] = RC(RCLen, vertcat(para_x_kl{:}), vertcat(para_x_kt{:}), Yl, Yt);
+        [NRMSE(saveParaNum+stepTrial), NRMSE_C(saveParaNum+stepTrial)] = TDRC(RCLen, vertcat(para_x_kl{:}), vertcat(para_x_kt{:}), Yl, Yt);
     catch
-        NRMSE(1,saveParaNum+stepTrial) =  NaN; NRMSE_C(saveParaNum+stepTrial) =  NaN;
+        NRMSE(saveParaNum+stepTrial) =  NaN; NRMSE_C(saveParaNum+stepTrial) =  NaN;
     end
 end
-
-% ModelName =
-% for step = 1:paraNum
-% end
 
 NRMSE(1,1) = mean(NRMSE(1,saveParaNum+1:end),'omitnan');
 NRMSE(1,2) = std(NRMSE(1,saveParaNum+1:end),0,2);
