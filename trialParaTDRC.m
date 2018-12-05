@@ -67,6 +67,10 @@ NRMSE(1,2) = std(NRMSE(1,saveParaNum+1:end),0,2);
 NRMSE_C(1,1) = mean(NRMSE_C(1,saveParaNum+1:end),'omitnan');
 NRMSE_C(1,2) = std(NRMSE_C(1,saveParaNum+1:end),0,2);
 
+[bestNRMSE, bestNRMSEIndex] = min(NRMSE(:,searchNum+1));
+bestNRMSE_C_ofBestNRMSE = NRMSE_C(bestNRMSEIndex);
+[bestNRMSE_C, bestNRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
+
 if searchCheck == 0
     clear ul ug ut Yl Yg Yt;
     

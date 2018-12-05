@@ -46,7 +46,7 @@ dataLen = RCLen + 500;
 seed_status = 1; % seed_dataGen - seed_mask
 dataGen = str2func(strcat('dataGenerator_',Task));
 
-parfor step_gap = 1:gapNum
+for step_gap = 1:gapNum
     for step_eig = 1:eigNum
         for step_c = 1:cNum
             for step_p = 1:pNum
@@ -98,8 +98,10 @@ end
 NRMSE = REC(:,:,1);
 NRMSE_C = REC(:,:,2);
 
-[bestNRMSE_C, bestNRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
+
 [bestNRMSE, bestNRMSEIndex] = min(NRMSE(:,searchNum+1));
+bestNRMSE_C_ofBestNRMSE = NRMSE_C(bestNRMSEIndex);
+[bestNRMSE_C, bestNRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
 
 clear REC saveData
 
