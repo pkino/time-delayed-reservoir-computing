@@ -1,8 +1,9 @@
 function [NRMSE_pinv, NRMSE_pinv_C, Ylp, Ytp] = TDRC(RCLen, x_kl, x_kt, Yl, Yt)
+global l_start
+l_start = 200; % Xが安定したところから学習スタート
+
 try
     %% 学習
-    l_start = 200; % Xが安定したところから学習スタート
-    
     Wout = Yl(1,l_start:l_start+RCLen-1)*pinv(x_kl(1:end,l_start:l_start+RCLen-1));
     
     %         Wout = (lasso( x_kl(:,l_start:l_start+RCLen-1)', Yl(1,l_start:l_start+RCLen-1)))';
