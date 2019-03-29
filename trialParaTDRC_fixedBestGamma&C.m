@@ -1,17 +1,15 @@
-function NARMA_paramSearch2(Task, order, fixedC, fixedGamma)
+function NARMA_paraParamSearch2(Task, order, fixedC, fixedGamma)
 
-% try
 %     load('\\WORKSTATION2013\test\20180628smallMap_p=3_Linear_NonLinearModel\201806280847TDRC=NL_NARMA10_biasCheck=0_inputCheck=0_c=-2.5-1.5_p=3-3_gamma=-4-1.5_trial=20.mat')
-% catch
-    load('201808011024TDRC=NL_NARMA10_biasCheck=0_inputCheck=0_c=-2.5-1.5_p=3-3_gamma=-2-1_trial=100.mat','NRMSE', 'eigNum', 'gapNum', 'gammaNum', 'cNum','theta', 'biasCheck', 'inputCheck')
-% end
+load('201808011024TDRC=NL_NARMA10_biasCheck=0_inputCheck=0_c=-2.5-1.5_p=3-3_gamma=-2-1_trial=100.mat','NRMSE', 'eigNum', 'gapNum', 'gammaNum', 'cNum','theta', 'biasCheck', 'inputCheck')
+
 paramMap1 = paramSearchFromMap(NRMSE, eigNum, gapNum, gammaNum, cNum, fixedC, fixedGamma);
 % load('\\WORKSTATION2013\test\20180628smallMap_p=3_Linear_NonLinearModel\201806280947TDRC=NL_NARMA30_biasCheck=0_inputCheck=0_c=-2.5-1.5_p=3-3_gamma=-4-1.5_trial=20.mat')
 % paramMap2 = paramSearchFromMap(NRMSE, eigNum, gapNum, gammaNum, cNum, fixedC, fixedGamma);
 paramMap2 = paramMap1;
 
 
-%　各変数定義しなおし
+% redifine each parameters
 trial=100; initNo=1; gammaCheck=0;
 
 NRMSE_num = (eigNum*gapNum)^2;
@@ -29,7 +27,7 @@ for map1Gap = 1:gapNum
                 NRMSE(recIndex,1:4) = [map1Gap,map1Eig,map2Gap,map2Eig];
                 NRMSE_C(recIndex,1:4) = [map1Gap,map1Eig,map2Gap,map2Eig];
                 seedREC{recIndex,1} = [map1Gap,map1Eig,map2Gap,map2Eig];
-                [NRMSE(recIndex,5:end), NRMSE_C(recIndex,5:end), seedREC{recIndex,2}] = trialParaTDRC(trial,initNo,2,paraParam,Task, order,gammaCheck,1);
+                [NRMSE(recIndex,5:end), NRMSE_C(recIndex,5:end), seedREC{recIndex,2}] = paraTDRC(trial,2,paraParam,Task, order,gammaCheck,1);
             end
         end
     end
@@ -59,11 +57,11 @@ for step = 1:vertical
         param = data((step-1)*vertical*other+(step2-1)*other+1:(step-1)*vertical*other+(step2-1)*other+other, 1:searchNum+2);
         
         if fixedC == 1
-            % c固定
+            % fixed c
             param = param(param(:,cIndex) == bestC,:);
         end
         if fixedGamma == 1
-            % gamma固定
+            % fixed gamma
             param = param(param(:,gammaIndex) == bestGamma,:);
         end
         
@@ -71,7 +69,7 @@ for step = 1:vertical
         [gridMin, miniIndex]  = min(param(:,end-1));
         paramMap{step,step2} = param(miniIndex,1:searchNum);
         
-        % 各値が知りたいときはコメントアウトを外す
+        % remove comment out if you want know each value
         %         miniIndex
         %         c=plotter(miniIndex,3)
     end

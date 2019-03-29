@@ -1,4 +1,4 @@
-function trialTDRC(trial, initNo, Model, Task, order, theta, learnDimension, biasCheck, inputCheck, ...
+function trialTDRC(trial, Model, Task, order, theta, learnDimension, biasCheck, inputCheck, ...
     cMin, cMax, pMin)
 dbstop if error
 
@@ -30,47 +30,16 @@ cNum = 20;
 % cMax = 1.5;
 cData = logspace(cMin,cMax,cNum);
 
-pNum = 1;
-% pMin = 3;
-pMax = pMin;
-pData = linspace(pMin,pMax,pNum);
+p=3;
 
-searchNum = 5;
+singleSearchNum = 4;
 saveNum = 2;
-saveData = cell(trial, gammaNum, pNum, cNum, eigNum, gapNum, saveNum);
-paramLength = gapNum*eigNum*cNum*pNum*gammaNum;
-paramsSet = NaN(paramLength,searchNum+3+1);
+singleSearchParams = gapNum*eigNum*cNum*pNum*gammaNum;
+singleParamsSet = NaN(singleSearchParams,singleSearchNum+3+1);
 
 RCLen = 1500;
 dataLen = RCLen + 500;
-seed_status = 1; % seed_dataGen - seed_mask
 dataGen = str2func(strcat('dataGenerator_',Task));
-
-for step_gap = 1:gapNum
-    for step_eig = 1:eigNum
-        for step_c = 1:cNum
-            for step_p = 1:pNum
-                for step_g = 1:gammaNum
-                    for stepTrial = 1:trial
-                        %% 入力・目標データの生成
-                        seed_dataGen = stepTrial+initNo-1;
-                        [ul, ~, ut, Yl, ~, Yt] = dataGen(dataLen,seed_dataGen,order);
-                        seed_no = stepTrial+seed_status;
-                        
-                        %% リザーバ計算
-                        [x_kl, x_kt] ...
-                            = timeDelayReservoir(seed_no, ul, ut, theta, learnDimension, biasCheck, inputCheck, ...
-                            a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), cData(step_c), pData(step_p), gammaData(step_g));
-                        
-                        %% 学習とテスト
-                        [saveData{stepTrial,step_g, step_p, step_c, step_eig, step_gap,:}] = TDRC(RCLen, x_kl, x_kt, Yl, Yt);
-                    end
-                end
-            end
-        end
-    end
-end
-saveData = permute(reshape(saveData,trial,[],saveNum),[2 1 3]);
 
 index = 1;
 for step_gap = 1:gapNum
@@ -78,7 +47,7 @@ for step_gap = 1:gapNum
         for step_c = 1:cNum
             for step_p = 1:pNum
                 for step_g = 1:gammaNum
-                    paramsSet(index, 1:searchNum) = [a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), ...
+                    singleParamsSet(index, 1:singleSearchNum) = [a_mat(step_gap,step_eig), b_mat(step_gap,step_eig), ...
                         cData(step_c), pData(step_p), gammaData(step_g)];
                     index = index + 1;
                 end
@@ -87,26 +56,30 @@ for step_gap = 1:gapNum
     end
 end
 
-REC = zeros(paramLength, searchNum+3+1+trial,saveNum);
-for stepSaveNum = 1:saveNum
-    paramsSet(:,searchNum+1) = mean(cell2mat(saveData(:,:,stepSaveNum)),2,'omitnan');
-    paramsSet(:,searchNum+2) = std(cell2mat(saveData(:,:,stepSaveNum)),0,2,'omitnan');
-    paramsSet(:,searchNum+3) = trial - sum(isnan(cell2mat(saveData(:,:,stepSaveNum))),2);
-    REC(:,:,stepSaveNum) =  horzcat(paramsSet,cell2mat(saveData(:,:,stepSaveNum)));
+parfor step = 1:singleSearchParams
+    for stepTrial = 1:trial
+        %% 入力・目標データの生成
+        [ul, ~, ut, Yl, ~, Yt] = dataGen(dataLen, order);
+        
+        %% リザーバ計算
+        [x_kl, x_kt] ...
+            = timeDelayReservoir(stepTrial, ul, ut, theta, learnDimension, biasCheck, inputCheck, ...
+            singleParamsSet(step,1),singleParamsSet(step,2), singleParamsSet(step,3), p, singleParamsSet(step,4));
+        
+        %% 学習とテスト
+        [N,NC,Ylp,Ytp]  = TDRC(RCLen, x_kl, x_kt, Yl, Yt);
+    end
+    NRMSE(step,stepTrial)=N; NRMSE_C(step,stepTrial)=NC;
 end
 
-NRMSE = REC(:,:,1);
-NRMSE_C = REC(:,:,2);
+NRMSE = [mean(NRMSE,2,'omitnan') std(NRMSE,0,2,'omitnan') trial-sum(isnan(NRMSE),2) paramsSet NaN(searchParams,1) NRMSE];
+NRMSE_C = [mean(NRMSE_C,2,'omitnan') std(NRMSE_C,0,2,'omitnan') trial-sum(isnan(NRMSE_C),2) paramsSet  NaN(searchParams,1) NRMSE_C];
 
-
-[bestNRMSE, bestNRMSEIndex] = min(NRMSE(:,searchNum+1));
-bestNRMSE_C_ofBestNRMSE = NRMSE_C(bestNRMSEIndex);
-[bestNRMSE_C, bestNRMSE_CIndex] = min(NRMSE_C(:,searchNum+1));
-
-clear REC saveData
+[bestNRMSE, bestNRMSEIndex] = min(NRMSE(:,1));
+bestNRMSE_C_ofBestNRMSE = NRMSE_C(bestNRMSEIndex,1);
 
 Date = datestr(datetime('now'),'yyyymmddHHMM');
-save(strcat(Date,'TDRC=', Model, '_NARMA',num2str(order), '_biasCheck=', num2str(biasCheck),'_inputCheck=', num2str(inputCheck), ...
+save(strcat(Date,'TDRC=', Model, '_', Task, num2str(order), '_biasCheck=', num2str(biasCheck),'_inputCheck=', num2str(inputCheck), ...
     '_c=', num2str(cMin),'-', num2str(cMax), '_p=', num2str(pMin),'-', num2str(pMax),...
     '_gamma=', num2str(gammaInit),'-', num2str(gammaFin), '_trial=', num2str(trial), '.mat'), '-v7.3');
 end

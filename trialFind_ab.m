@@ -12,13 +12,14 @@ stepFin_eigMax = length(value_eigMax);
 stepFin_gapMin = length(value_gapMin);
 stepFin_gapMax = length(value_gapMax);
 
+eigNum=5; gapNum=5;
 parfor step_eigMin = 1:stepFin_eigMin
     for step_eigMax = 1:stepFin_eigMax
         for step_gapMin = 1:stepFin_gapMin
             for step_gapMax = 1:stepFin_gapMax
                 if  value_eigMin(step_eigMin) > value_eigMax(1,step_eigMax)
                     if value_gapMin(1,step_gapMin) < value_gapMax(1,step_gapMax)
-                        [A, B] = find_ab(value_eigMin(step_eigMin), value_eigMax(step_eigMax), value_gapMax(step_gapMax), value_gapMin(step_gapMin));
+                        [A, B] = find_ab(value_eigMin(step_eigMin), value_eigMax(step_eigMax), eigNum, value_gapMax(step_gapMax), value_gapMin(step_gapMin), gapNum);
                         if sum(sum(isnan(A))) == 0
                             paramData(step_eigMin, step_eigMax, step_gapMax, step_gapMin) = 1;
                         end

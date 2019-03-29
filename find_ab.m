@@ -3,9 +3,7 @@ eigen_init = eigMin; %-0.016
 eigen_fin = eigMax; %3.125e-3
 Max_Eigen = -logspace(eigen_init, eigen_fin, eigNum);
 
-%% dx = -a*x + b*x_tau において、最大固有値と2番目の固有値が決まっているときにa,bを求める
-tau = 80;
-
+%% determine a,b (in dx = -a*x + b*x_tau) using fixed max eigen and gaps 
 a_matrix = NaN(gapNum, eigNum);
 b_matrix = NaN(gapNum, eigNum);
 tau = 80;
@@ -20,7 +18,6 @@ for step_gap = 1:gapNum
         try
             [a_matrix(step_gap,step_eig), b_matrix(step_gap,step_eig)] = vpasolve([real(lambert(1))==Max_Eigen(step_eig), real(lambert(2))==Max_Eigen(step_eig)-dis_eig(step_gap)], [a, b]);
         catch
-            %error('与えられた固有値配置を実現できませんでした');
         end
     end
 end

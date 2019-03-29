@@ -11,7 +11,7 @@ if NRMSEIndex > paramsLastIndex
     paramsLastIndex = NRMSEIndex + 2;
 end
 
-[bestPerform, bestIndex] = min(data(:,1));
+[bestPerform, bestIndex] = min(data(:,NRMSEIndex));
 bestC = data(bestIndex, cIndex);
 bestParams = data(bestIndex, paramsStartIndex:paramsLastIndex)
 
